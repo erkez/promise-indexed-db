@@ -1,0 +1,8 @@
+{
+  "framework": "mocha",
+  "src_files": [
+    "https://cdnjs.cloudflare.com/ajax/libs/should.js/11.1.2/should.min.js",
+    "dist/**/*.js",
+    "tests/**/*.js"
+  ]
+}

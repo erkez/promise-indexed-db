@@ -1,0 +1,26 @@
+{
+  "name": "promise-indexed-db",
+  "version": "0.1.0",
+  "description": "IndexedDB wrapped in a promises API",
+  "main": "src/index.js",
+  "author": "Alan Heitkotter",
+  "license": "MIT",
+  "dependencies": {
+    "bluebird": "^3.4.7"
+  },
+  "devDependencies": {
+    "babel-eslint": "^7.1.1",
+    "babel-preset-es2015": "^6.18.0",
+    "babelify": "^7.3.0",
+    "browserify": "^13.3.0",
+    "eslint": "^3.13.1",
+    "gulp": "^3.9.1",
+    "gulp-eslint": "^3.0.1",
+    "gulp-uglify": "^2.0.0",
+    "gulp-util": "^3.0.8",
+    "loose-envify": "^1.3.0",
+    "testem": "^1.14.2",
+    "vinyl-source-stream": "^1.1.0"
+  },
+  "repository": "https://github.com/erkez/promise-indexed-db"
+}
