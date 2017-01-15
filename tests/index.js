@@ -24,6 +24,29 @@ describe('IndexedDB Bluebird', function() {
 
     });
 
+    describe('Database Upgrade', function() {
+
+        before(() => {
+            deleteDatabase('test-upgrade');
+        });
+
+        it('should create store, access its transaction and add initial upgrade data', function(done) {
+            openDatabase('test-upgrade', 1, upgradeDb => {
+                var store = upgradeDb.createObjectStore('my-store');
+                store.createIndex('my-index', 'path', { unique: true });
+                store.createIndex('my-index2', 'path2', { multiEntry: true });
+                store.transaction.then(db => {
+                    db.usingReadWriteStore('my-store', store => {
+                        store.put({ path: '/' }, '/').then(() => {
+                            done();
+                        });
+                    });
+                });
+            });
+        });
+
+    });
+
     describe('Database', function() {
 
         var database;

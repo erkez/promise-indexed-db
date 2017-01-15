@@ -87,9 +87,31 @@ class DatabaseUpgrade {
     }
 
     createObjectStore() {
+        var _database = this._database;
+        var transaction;
         var store = this._database.createObjectStore.apply(this._database, arguments);
 
         return {
+            get transaction() {
+                if (transaction) {
+                    return transaction;
+                }
+
+                transaction = new Promise((resolve, reject) => {
+                    var _transaction = store.transaction;
+
+                    _transaction.oncomplete = function() {
+                        resolve(new Database(_database));
+                    };
+
+                    _transaction.onerror = function(event) {
+                        reject(event.target.error);
+                    };
+                });
+
+                return transaction;
+            },
+
             createIndex() {
                 store.createIndex.apply(store, arguments);
             },
