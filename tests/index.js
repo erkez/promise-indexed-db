@@ -31,6 +31,8 @@ describe('IndexedDB Bluebird', function() {
         beforeEach(function() {
             database = openDatabase('test', function(db) {
                 db.createObjectStore('my-store');
+                var indexedStore = db.createObjectStore('indexed-store', { keyPath: 'id' });
+                indexedStore.createIndex('email', 'email', { unique: true });
             });
         });
 
@@ -65,8 +67,9 @@ describe('IndexedDB Bluebird', function() {
         it('should create a single store transaction without mode', function() {
             return database.then(db => {
                 db.version.should.equal(1);
-                db.objectStoreNames.length.should.equal(1);
+                db.objectStoreNames.length.should.equal(2);
                 db.objectStoreNames.contains('my-store').should.equal(true);
+                db.objectStoreNames.contains('indexed-store').should.equal(true);
                 return db.transaction('my-store', transaction => {
                     should.exist(transaction);
                 });
@@ -134,6 +137,17 @@ describe('IndexedDB Bluebird', function() {
             var value = { a: 456 };
             var key = 'using-store-key';
 
+            it('should have correct store properties', function() {
+                return database.then(db => {
+                    return db.usingStore('my-store', store => {
+                        store.name.should.equal('my-store');
+                        store.indexNames.length.should.equal(0);
+                        store.autoIncrement.should.equal(false);
+                        should.not.exist(store.keyPath);
+                    });
+                });
+            });
+
             it('should use read-write store', function() {
                 return database.then(db => {
                     return db.usingReadWriteStore('my-store', store => store.put(value, key));
@@ -158,6 +172,53 @@ describe('IndexedDB Bluebird', function() {
                     .then(retrievedValue => {
                         retrievedValue.should.deepEqual(value);
                     });
+            });
+
+        });
+
+        describe('Using Indexed Store', function() {
+
+            it('should have correct store properties', function() {
+                return database.then(db => {
+                    return db.usingStore('indexed-store', store => {
+                        store.name.should.equal('indexed-store');
+                        store.keyPath.should.equal('id');
+                        store.indexNames.length.should.equal(1);
+                        store.indexNames.contains('email').should.equal(true);
+                        store.autoIncrement.should.equal(false);
+                    });
+                });
+            });
+
+            it('should get store index with correct properties', function() {
+                return database.then(db => {
+                    return db.usingStore('indexed-store', store => {
+                        var email = store.index('email');
+                        email.name.should.equal('email');
+                        email.keyPath.should.equal('email');
+                        email.unique.should.equal(true);
+                        email.multiEntry.should.equal(false);
+                    });
+                });
+            });
+
+            it('should add values to indexed store', function() {
+                return database.then(db => {
+                    return db.usingReadWriteStore('indexed-store', store => {
+                        store.add({ id: 1, email: 'user1@example.com' });
+                        store.add({ id: 2, email: 'user2@example.com' });
+                    });
+                });
+            });
+
+            it('should retrieve values in indexed store using unique email index', function() {
+                return database.then(db => {
+                    return db.usingStore('indexed-store', store => {
+                        return store.index('email').get('user2@example.com');
+                    });
+                }).then(user => {
+                    user.id.should.equal(2);
+                });
             });
 
         });
