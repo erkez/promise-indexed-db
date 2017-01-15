@@ -5,6 +5,11 @@ import { useDatabase, createDatabaseUpgradeHandler } from './database';
 import { promisifyRequest } from './request';
 
 
+export function isIndexedDBAvailable() {
+    return indexedDB != null;
+}
+
+
 export const openDatabase = withIndexedDB(function openDatabase(name, version, handleUpgrade) {
     if (typeof version === 'function') {
         handleUpgrade = version;
@@ -33,7 +38,7 @@ export const deleteDatabase = withIndexedDB(function deleteDatabase(name) {
 
 function withIndexedDB(callback) {
     return Promise.method(function() {
-        if (indexedDB == null) {
+        if (!isIndexedDBAvailable()) {
             throw new Error('IndexedDB is not supported on device.');
         }
 
