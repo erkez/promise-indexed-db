@@ -57,12 +57,12 @@ export default class ObjectStore {
         return new Index(index);
     }
 
-    openCursor() {
-        throw new Error('Not implemented');
+    openCursor(key, direction, callback) {
+        _openCursor(this._store, key, direction, callback);
     }
 
-    openKeyCursor() {
-        throw new Error('Not implemented');
+    openKeyCursor(key, direction, callback) {
+        _openKeyCursor(this._store, key, direction, callback);
     }
 
     put() {
@@ -73,6 +73,7 @@ export default class ObjectStore {
         return promisifyRequest(this._store.count.apply(this._store, arguments));
     }
 }
+
 
 class Index {
     constructor(index) {
@@ -111,11 +112,85 @@ class Index {
         return promisifyRequest(this._index.getAllKeys.apply(this._index, arguments));
     }
 
-    openCursor() {
-        throw new Error('Not implemented');
+    openCursor(key, direction, callback) {
+        _openCursor(this._index, key, direction, callback);
     }
 
-    openKeyCursor() {
-        throw new Error('Not implemented');
+    openKeyCursor(key, direction, callback) {
+        _openKeyCursor(this._index, key, direction, callback);
     }
+}
+
+
+class Cursor {
+    constructor(cursor) {
+        this._cursor = cursor;
+    }
+
+    get direction() {
+        return this._cursor.direction;
+    }
+
+    get key() {
+        return this._cursor.key;
+    }
+
+    get primaryKey() {
+        return this._cursor.primaryKey;
+    }
+
+    advance() {
+        this._cursor.advance.apply(this._cursor, arguments);
+    }
+
+    continue() {
+        this._cursor.continue.apply(this._cursor, arguments);
+    }
+
+    delete() {
+        return promisifyRequest(this._cursor.delete.apply(this._cursor, arguments));
+    }
+
+    update() {
+        return promisifyRequest(this._cursor.update.apply(this._cursor, arguments));
+    }
+}
+
+
+class CursorWithValue extends Cursor {
+    constructor(cursor) {
+        super(cursor);
+    }
+
+    get value() {
+        return this._cursor.value;
+    }
+}
+
+
+function _openCursor(source, key, direction, callback) {
+    var request = source.openCursor(key, direction);
+
+    request.onsuccess = event => {
+        var cursor = event.target.result;
+        callback(cursor == null ? null : new CursorWithValue(cursor));
+    };
+
+    request.onerror = event => {
+        console.error('Cursor error', event.target.error);
+    };
+}
+
+
+function _openKeyCursor(source, key, direction, callback) {
+    var request = source.openKeyCursor(key, direction);
+
+    request.onsuccess = event => {
+        var cursor = event.target.result;
+        callback(cursor == null ? null : new Cursor(cursor));
+    };
+
+    request.onerror = event => {
+        console.error('Cursor error', event.target.error);
+    };
 }

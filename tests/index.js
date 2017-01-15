@@ -223,6 +223,105 @@ describe('IndexedDB Bluebird', function() {
 
         });
 
+        describe('Using Cursor', function() {
+
+            it('should have correct store cursor with value properties', function() {
+                return database.then(db => {
+                    return db.usingStore('indexed-store', store => {
+                        store.openCursor(1, 'next', cursor => {
+                            cursor.direction.should.equal('next');
+                            cursor.key.should.equal(1);
+                            cursor.primaryKey.should.equal(1);
+                            cursor.value.should.deepEqual({ id: 1, email: 'user1@example.com' });
+                        });
+                    });
+                });
+            });
+
+            it('should have correct store cursor properties', function() {
+                return database.then(db => {
+                    return db.usingStore('indexed-store', store => {
+                        store.openKeyCursor(2, 'next', cursor => {
+                            cursor.direction.should.equal('next');
+                            cursor.key.should.equal(2);
+                            cursor.primaryKey.should.equal(2);
+                            should.not.exist(cursor.value);
+                        });
+                    });
+                });
+            });
+
+            it('should have correct index cursor with value properties', function() {
+                return database.then(db => {
+                    return db.usingStore('indexed-store', store => {
+                        store.index('email').openCursor('user1@example.com', 'next', cursor => {
+                            cursor.direction.should.equal('next');
+                            cursor.key.should.equal('user1@example.com');
+                            cursor.primaryKey.should.equal(1);
+                            cursor.value.should.deepEqual({ id: 1, email: 'user1@example.com' });
+                        });
+                    });
+                });
+            });
+
+            it('should have correct index cursor properties', function() {
+                return database.then(db => {
+                    return db.usingStore('indexed-store', store => {
+                        store.index('email').openKeyCursor('user2@example.com', 'next', cursor => {
+                            cursor.direction.should.equal('next');
+                            cursor.key.should.equal('user2@example.com');
+                            cursor.primaryKey.should.equal(2);
+                            should.not.exist(cursor.value);
+                        });
+                    });
+                });
+            });
+
+            it('should update cursor value', function(done) {
+                database.then(db => {
+                    return db.usingReadWriteStore('indexed-store', store => {
+                        store.openCursor(null, 'next', cursor => {
+                            if (cursor) {
+                                if (cursor.value.id === 2) {
+                                    cursor.value.name = 'John';
+                                    cursor.update(cursor.value).then(() => {
+                                        store.get(2).then(value => {
+                                            value.name.should.equal('John');
+                                            done();
+                                        });
+                                    });
+                                }
+
+                                cursor.continue();
+                            }
+                        });
+                    });
+                });
+            });
+
+            it('should delete cursor value', function(done) {
+                database.then(db => {
+                    return db.usingReadWriteStore('indexed-store', store => {
+                        store.openCursor(null, 'next', cursor => {
+                            if (cursor) {
+                                if (cursor.value.id === 2) {
+                                    cursor.delete().then(() => {
+                                        store.get(2).then(value => {
+                                            should.not.exist(value);
+                                            done();
+                                        });
+                                    });
+                                }
+
+                                cursor.continue();
+                            }
+                        });
+                    });
+                });
+            });
+
+        });
+
     });
 
     describe('Using Database', function() {
