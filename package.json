@@ -1,8 +1,8 @@
 {
   "name": "promise-indexed-db",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "IndexedDB wrapped in a promises API",
-  "main": "src/index.js",
+  "main": "dist/promise-indexed-db.js",
   "author": "Alan Heitkotter",
   "license": "MIT",
   "dependencies": {
