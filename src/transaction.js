@@ -21,7 +21,7 @@ export const openTransaction = Promise.method(function openTransaction(database,
             resolve(callbackResult);
         };
 
-        transaction.onerror = function(event) {
+        transaction.onerror = transaction.onabort = function(event) {
             reject(event.target.error);
         };
     });

@@ -352,16 +352,15 @@ describe('IndexedDB Bluebird', function() {
         var databaseName = 'test2';
         var storeName = 'some-store';
 
-        it('should dispose database after use', function(done) {
+        it('should dispose database after use', function() {
             var upgrader = database => {
                 database.createObjectStore(storeName);
             };
 
-            usingDatabase(openDatabase(databaseName, upgrader), db => {
+            return usingDatabase(openDatabase(databaseName, upgrader), db => {
                 return db.usingReadWriteStore(storeName, store => store.put('test', 'some key'));
             }).then(() => {
                 deleteDatabase(databaseName);
-                done();
             });
         });
 
